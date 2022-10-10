@@ -19,8 +19,8 @@ RUN pip install -r requirements.txt
 
 # copy project
 COPY ./src .
-RUN ls
-COPY ./docker-entrypoint.sh /discountcode/docker-entrypoint.sh
-RUN chmod +x /discountcode/docker-entrypoint.sh
 
-ENTRYPOINT ["/discountcode/docker-entrypoint.sh"]
+COPY ./docker-entrypoint.sh /usr/local/docker-entrypoint.sh
+RUN chmod +x /usr/local/docker-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/docker-entrypoint.sh"]
