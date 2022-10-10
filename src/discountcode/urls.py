@@ -16,6 +16,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from dcapp.views import (
+    GenerateDiscountCode,
+    GetDiscountCode,
+)
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('generate-dc/', GenerateDiscountCode.as_view()),
+    path('get-dc/', GetDiscountCode.as_view()),
 ]
