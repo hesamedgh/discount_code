@@ -1,0 +1,25 @@
+version: '3.7'
+
+services:
+  database:
+    image: postgres:13.0-alpine
+    ports:
+      - "5432:5432"
+    volumes:
+      - PGDATA:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: discountcodeuser
+      POSTGRES_PASSWORD: discountcodepass
+      POSTGRES_DB: discountcode
+
+  backend:
+    build: .
+    depends_on:
+      - database
+    env_file:
+      - env.dev
+    ports:
+      - "8000:8000"
+
+volumes:
+  PGDATA:

@@ -25,7 +25,7 @@ SECRET_KEY = '_v^h4vot-md74!p!^a(#$f%i((lrf*=fa*ex%$$bop69z-!+pe'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
