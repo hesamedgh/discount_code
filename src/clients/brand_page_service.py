@@ -40,10 +40,11 @@ class BrandPageService:
         if not notify_info or datetime.now() > notify_info.get(cls.NOTIFY_CACHE_TTL_KEY):
             info = cls.request_notify_info(brand_slug)
             if not info:
-                return {}  # Dont cache empty response!
+                return "", {}  # Dont cache empty response!
             cls.notify_info_in_memory_cache[brand_slug] = {
                 cls.NOTIFY_CACHE_INFO_KEY: info,
                 cls.NOTIFY_CACHE_TTL_KEY: datetime.now() + cls.notify_info_cache_TTL
             }
 
-        return cls.notify_info_in_memory_cache[brand_slug][cls.NOTIFY_CACHE_INFO_KEY]
+        info = cls.notify_info_in_memory_cache[brand_slug][cls.NOTIFY_CACHE_INFO_KEY]
+        return info.get("method"), info.get("data")

@@ -17,6 +17,7 @@ from ratelimiter.limiter import LimiterAbstractClass
 from dcapp.utils import (
     create_discount_codes_with_retry_for_uniqueness,
     reserve_discount_code_retry_race_condition,
+    send_async_notification_to_brand,
 )
 
 
@@ -91,6 +92,11 @@ class GetDiscountCode(View):
             self.rate_limiter.set_new_get_code_time(
                 brand_slug=brand_slug, username=username
             )
+
+        # Send async notif.
+        send_async_notification_to_brand(
+            brand_slug=brand_slug, username=username
+        )
 
         return HttpResponse(dc.discount_code)
 

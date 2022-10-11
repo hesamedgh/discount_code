@@ -1,3 +1,5 @@
+import time
+
 from unittest.mock import patch
 
 from django.test import TestCase
@@ -31,6 +33,11 @@ class GetDiscountCodeTestCase(TestCase):
             brand_slug='test_brand',
             discount_percent=25,
             discount_code="test_code"
+        )
+        DiscountCode.objects.create(
+            brand_slug='test_brand2',
+            discount_percent=25,
+            discount_code="test_code2"
         )
 
     def test_login_required(self):
@@ -71,3 +78,30 @@ class GetDiscountCodeTestCase(TestCase):
                 HTTP_USERNAME="test_user"
             )
             self.assertEqual(response.status_code, 403)
+
+    def test_send_notification(self):
+        notify_data = {
+            "method": "webhook",
+            "data": {
+                "url": "testurl"
+            }
+        }
+        user_data = {"userdata": "userdata"}
+        notify_info_mock = patch('clients.brand_page_service.BrandPageService.get_notify_info').start()
+        notify_info_mock.return_value = notify_data["method"], notify_data["data"]
+        get_user_info_mock = patch('clients.auth_service.AuthService.get_user_data').start()
+        get_user_info_mock.return_value = user_data
+        send_webhook_notif_mock = patch('dcapp.utils.notify.send_webhook_notification').start()
+
+        with patch('ratelimiter.simple_limiter_singleton.can_user_get_discount_code', return_value=True):
+            response = self.client.post(
+                '/get-dc/',
+                data={"brand_slug": "test_brand"},
+                content_type="application/json",
+                HTTP_USERNAME="test_user"
+            )
+            self.assertEqual(response.status_code, 200)
+            time.sleep(1)   # Wait for thread to finish.
+            send_webhook_notif_mock.assert_called_once_with(
+                notify_data['data'], user_data
+            )
