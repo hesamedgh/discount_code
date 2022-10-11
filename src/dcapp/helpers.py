@@ -6,11 +6,9 @@ from django.db import transaction
 from django.db.utils import (
     IntegrityError, OperationalError
 )
-from dcapp.models import DiscountCode
+from django.conf import settings
 
-MAX_UNIQUENESS_RETRY_COUNT = 5
-MAX_RESERVE_RETRY_COUNT = 5
-DISCOUNT_CODE_LENGTH = 10
+from dcapp.models import DiscountCode
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +16,7 @@ logger = logging.getLogger(__name__)
 def create_discount_codes_with_retry_for_uniqueness(brand_slug: str, percent: int, count: int) -> bool:
     created = False
     retry_count = 0
-    while (not created and retry_count < MAX_UNIQUENESS_RETRY_COUNT):
+    while (not created and retry_count < settings.DCAPP_MAX_UNIQUENESS_RETRY_COUNT):
         try:
             create_discount_codes(brand_slug, percent, count)
             created = True
@@ -40,7 +38,9 @@ def create_discount_codes(brand_slug: str, percent: int, count: int):
     objects = []
     for _ in range(count):
         discount_code = ''.join(
-            random.choices(string.ascii_uppercase + string.digits, k=DISCOUNT_CODE_LENGTH)
+            random.choices(
+                string.ascii_uppercase + string.digits,
+                k=settings.DCAPP_DISCOUNT_CODE_LENGTH)
         )
         objects.append(
             DiscountCode(
@@ -55,7 +55,7 @@ def create_discount_codes(brand_slug: str, percent: int, count: int):
 def reserve_discount_code_retry_race_condition(brand_slug: str, username: str) -> (DiscountCode, Exception):
     retry_count = 0
     reserved = None
-    while (not reserved and retry_count < MAX_RESERVE_RETRY_COUNT):
+    while (not reserved and retry_count < settings.DCAPP_MAX_RESERVE_RETRY_COUNT):
         try:
             reserved = reserve_discount_code(brand_slug=brand_slug, username=username)
             if not reserved:  # No discount codes left.

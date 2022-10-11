@@ -7,10 +7,8 @@ services:
       - "5432:5432"
     volumes:
       - PGDATA:/var/lib/postgresql/data
-    environment:
-      POSTGRES_USER: discountcodeuser
-      POSTGRES_PASSWORD: discountcodepass
-      POSTGRES_DB: discountcode
+    env_file:
+      - env.dev
 
   backend:
     build: .

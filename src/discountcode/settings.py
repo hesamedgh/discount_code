@@ -123,3 +123,13 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+DCAPP_MAX_UNIQUENESS_RETRY_COUNT = os.environ.get(
+    "DCAPP_MAX_UNIQUENESS_RETRY_COUNT", 5
+)
+DCAPP_MAX_RESERVE_RETRY_COUNT = os.environ.get(
+    "DCAPP_MAX_RESERVE_RETRY_COUNT", 5
+)
+DCAPP_DISCOUNT_CODE_LENGTH = os.environ.get(
+    "DCAPP_DISCOUNT_CODE_LENGTH", 10
+)
