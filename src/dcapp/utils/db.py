@@ -27,7 +27,7 @@ def create_discount_codes_with_retry_for_uniqueness(brand_slug: str, percent: in
             return False
 
     if not created:
-        logger.warning(
+        logger.error(
             "Could not create discount codes, reached max_uniqueness_retry"
         )
 
@@ -68,7 +68,7 @@ def reserve_discount_code_retry_race_condition(brand_slug: str, username: str) -
             logger.error(e)
             return None, e
 
-    logger.warning(
+    logger.error(
         "Could not reserve discount code, reached max_reserve_retry"
     )
     return None, DiscountCode.IntegrityError()
