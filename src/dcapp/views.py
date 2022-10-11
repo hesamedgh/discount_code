@@ -12,7 +12,9 @@ from django.http.response import (
     HttpResponseNotFound,
 )
 
-from dcapp.helpers import (
+from ratelimiter.limiter import LimiterAbstractClass
+
+from dcapp.utils import (
     create_discount_codes_with_retry_for_uniqueness,
     reserve_discount_code_retry_race_condition,
 )
@@ -51,8 +53,14 @@ class GenerateDiscountCode(View):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class GetDiscountCode(View):
+    rate_limiter = None
+
+    def __init__(self, rate_limiter: LimiterAbstractClass):
+        self.rate_limiter = rate_limiter
+
     def post(self, request):
-        # Login required, Auth service would've set the username header if user was logged in.
+        # Login required.
+        # Auth service would've set the username header if user was logged in.
         username = request.headers.get('username')
         if not username:
             return HttpResponseForbidden()
@@ -62,6 +70,14 @@ class GetDiscountCode(View):
 
         body = json.loads(request.body)
         brand_slug = body['brand_slug']
+
+        # Check user is not limited to get code.
+        if self.rate_limiter and not self.rate_limiter.can_user_get_discount_code(
+            brand_slug=brand_slug, username=username
+        ):
+            return HttpResponseForbidden("rate limited.")
+
+        # Get code, avoid race condition and giving 1 code to 2 users.
         dc, error = reserve_discount_code_retry_race_condition(
             brand_slug=brand_slug, username=username
         )
@@ -69,6 +85,12 @@ class GetDiscountCode(View):
             return HttpResponseServerError()
         if not dc:
             return HttpResponseNotFound()
+
+        # Update rate limiter and add the new time for this user.
+        if self.rate_limiter:
+            self.rate_limiter.set_new_get_code_time(
+                brand_slug=brand_slug, username=username
+            )
 
         return HttpResponse(dc.discount_code)
 

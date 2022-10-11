@@ -1,4 +1,7 @@
+from unittest.mock import patch
+
 from django.test import TestCase
+
 from dcapp.models import DiscountCode
 
 
@@ -58,3 +61,13 @@ class GetDiscountCodeTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content.decode('utf-8'), self.dc.discount_code)
         self.assertEqual(self.dc.reserved_by, "test_user")
+
+    def test_rate_limit(self):
+        with patch('ratelimiter.simple_limiter_singleton.can_user_get_discount_code', return_value=False):
+            response = self.client.post(
+                '/get-dc/',
+                data={"brand_slug": "test_brand"},
+                content_type="application/json",
+                HTTP_USERNAME="test_user"
+            )
+            self.assertEqual(response.status_code, 403)
